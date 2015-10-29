@@ -269,8 +269,8 @@ function $ViewDirective(   $state,   $injector,   $uiViewScroll,   $interpolate)
   return directive;
 }
 
-$ViewDirectiveFill.$inject = ['$compile', '$controller', '$state', '$interpolate'];
-function $ViewDirectiveFill (  $compile,   $controller,   $state,   $interpolate) {
+$ViewDirectiveFill.$inject = ['$rootScope', '$compile', '$controller', '$state', '$interpolate'];
+function $ViewDirectiveFill ($rootScope,  $compile,   $controller,   $state,   $interpolate) {
   return {
     restrict: 'ECA',
     priority: -400,
@@ -293,12 +293,17 @@ function $ViewDirectiveFill (  $compile,   $controller,   $state,   $interpolate
         if (locals.$$controller) {
           locals.$scope = scope;
           locals.$element = $element;
-          var controller = $controller(locals.$$controller, locals);
-          if (locals.$$controllerAs) {
-            scope[locals.$$controllerAs] = controller;
+          try {
+            var controller = $controller(locals.$$controller, locals);
+            if (locals.$$controllerAs) {
+              scope[locals.$$controllerAs] = controller;
+            }
+            $element.data('$ngControllerController', controller);
+            $element.children().data('$ngControllerController', controller);
           }
-          $element.data('$ngControllerController', controller);
-          $element.children().data('$ngControllerController', controller);
+          catch(e) {
+            $rootScope.$broadcast('$nestedStateControllerFailed', [$state, e]);
+          }
         }
 
         link(scope);
